@@ -257,6 +257,186 @@ def plot_risk_gauge(risk_metrics):
     
     # Display the chart
     st.plotly_chart(fig, use_container_width=True)
+    
+def plot_animated_risk_meter(risk_metrics):
+    """
+    Plot animated risk meter with real-time color-changing indicators
+    """
+    if not risk_metrics:
+        st.error("No risk metrics available")
+        return
+    
+    # Extract risk metrics
+    volatility = risk_metrics.get("volatility", 0)
+    sharpe_ratio = risk_metrics.get("sharpe_ratio", 0)
+    max_drawdown = risk_metrics.get("max_drawdown", 0)
+    risk_level = risk_metrics.get("risk_level", "Unknown")
+    
+    # Create container for animation
+    risk_container = st.container()
+    
+    # Map risk level to a numeric scale (0-100)
+    risk_value_map = {
+        "Low": 20,
+        "Medium": 40,
+        "Medium-High": 60,
+        "High": 80,
+        "Very High": 100,
+        "Unknown": 50
+    }
+    
+    risk_value = risk_value_map.get(risk_level, 50)
+    
+    # Risk level color map
+    risk_colors = {
+        "Low": "#00FA00",  # Green
+        "Medium": "#96FA00",  # Yellow-Green
+        "Medium-High": "#FAFA00",  # Yellow
+        "High": "#FA9600",  # Orange
+        "Very High": "#FA0000",  # Red
+        "Unknown": "#AAAAAA"  # Gray
+    }
+    
+    risk_color = risk_colors.get(risk_level, "#AAAAAA")
+    
+    # Convert the hex color to RGB for opacity adjustments
+    risk_color_rgb = tuple(int(risk_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+    
+    with risk_container:
+        st.markdown(f"""
+        <style>
+        @keyframes pulse {{
+            0% {{ opacity: 0.6; }}
+            50% {{ opacity: 1.0; }}
+            100% {{ opacity: 0.6; }}
+        }}
+        .risk-meter-container {{
+            background-color: rgba(30, 30, 30, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+            border: 1px solid rgba(100, 100, 100, 0.5);
+        }}
+        .risk-meter-title {{
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: white;
+        }}
+        .risk-meter {{
+            height: 30px;
+            width: 100%;
+            background-color: rgba(50, 50, 50, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 20px;
+        }}
+        .risk-meter-fill {{
+            height: 100%;
+            width: {risk_value}%;
+            background: linear-gradient(90deg, rgba({risk_color_rgb[0]}, {risk_color_rgb[1]}, {risk_color_rgb[2]}, 0.7) 0%, 
+                                              rgba({risk_color_rgb[0]}, {risk_color_rgb[1]}, {risk_color_rgb[2]}, 1) 100%);
+            border-radius: 15px;
+            transition: width 1s ease-in-out;
+            animation: pulse 2s infinite;
+        }}
+        .risk-level-indicator {{
+            position: absolute;
+            top: -25px;
+            transform: translateX(-50%);
+            color: {risk_color};
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            animation: pulse 2s infinite;
+        }}
+        .risk-level-text {{
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: {risk_color};
+            animation: pulse 2s infinite;
+        }}
+        .risk-metrics-container {{
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }}
+        .risk-metric-box {{
+            background-color: rgba(50, 50, 50, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            width: 30%;
+            border: 1px solid rgba({risk_color_rgb[0]}, {risk_color_rgb[1]}, {risk_color_rgb[2]}, 0.5);
+            box-shadow: 0 0 10px rgba({risk_color_rgb[0]}, {risk_color_rgb[1]}, {risk_color_rgb[2]}, 0.2);
+            transition: all 0.3s ease;
+        }}
+        .risk-metric-box:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px rgba({risk_color_rgb[0]}, {risk_color_rgb[1]}, {risk_color_rgb[2]}, 0.4);
+        }}
+        .risk-metric-title {{
+            font-size: 16px;
+            color: #CCCCCC;
+            margin-bottom: 8px;
+        }}
+        .risk-metric-value {{
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+        }}
+        </style>
+        
+        <div class="risk-meter-container">
+            <div class="risk-meter-title">Real-time Risk Assessment</div>
+            <div class="risk-meter">
+                <div class="risk-meter-fill"></div>
+                <div class="risk-level-indicator" style="left: {risk_value}%">{risk_level}</div>
+            </div>
+            <div class="risk-level-text">Risk Level: {risk_level}</div>
+            
+            <div class="risk-metrics-container">
+                <div class="risk-metric-box">
+                    <div class="risk-metric-title">Volatility</div>
+                    <div class="risk-metric-value">{volatility:.4f}</div>
+                </div>
+                <div class="risk-metric-box">
+                    <div class="risk-metric-title">Sharpe Ratio</div>
+                    <div class="risk-metric-value">{sharpe_ratio:.4f}</div>
+                </div>
+                <div class="risk-metric-box">
+                    <div class="risk-metric-title">Max Drawdown</div>
+                    <div class="risk-metric-value">{max_drawdown * 100:.2f}%</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Add real-time updating effect using Streamlit's built-in elements
+        with st.expander("Risk Interpretation", expanded=False):
+            st.markdown(f"""
+            - **Current Risk Level:** {risk_level}
+            - **Volatility:** {volatility:.4f} - {'Very High' if volatility > 0.8 else 'High' if volatility > 0.6 else 'Medium' if volatility > 0.4 else 'Low'}
+            - **Sharpe Ratio:** {sharpe_ratio:.4f} - {'Excellent' if sharpe_ratio > 1.5 else 'Good' if sharpe_ratio > 1 else 'Average' if sharpe_ratio > 0.5 else 'Poor'}
+            - **Maximum Drawdown:** {max_drawdown * 100:.2f}% - {'Severe' if max_drawdown < -0.5 else 'Significant' if max_drawdown < -0.3 else 'Moderate' if max_drawdown < -0.15 else 'Minimal'}
+            
+            **What This Means:**
+            
+            {
+                "Low": "This cryptocurrency has shown relatively stable price behavior with limited volatility compared to the market. It may be suitable for risk-averse investors.",
+                "Medium": "This cryptocurrency has moderate price fluctuations but remains more stable than many altcoins. Suitable for investors with moderate risk tolerance.",
+                "Medium-High": "This cryptocurrency experiences significant price swings and volatility. Investors should be prepared for substantial price movements in either direction.",
+                "High": "This cryptocurrency has high volatility with rapid and unpredictable price movements. Only suitable for risk-tolerant investors who can withstand significant losses.",
+                "Very High": "This cryptocurrency has extreme volatility and price swings. Only suitable for speculative positions with money you can afford to lose entirely.",
+                "Unknown": "Insufficient data to accurately assess risk. Proceed with caution."
+            }.get(risk_level, "Risk assessment unavailable.")
+            """)
+    
+    return True
 
 def plot_feature_importance(feature_importance, top_n=10):
     """

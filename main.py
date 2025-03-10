@@ -19,8 +19,9 @@ from ml_models import (
 )
 from visualizations import (
     plot_price_history, plot_price_prediction, plot_volatility,
-    plot_risk_gauge, plot_feature_importance, plot_market_dominance,
-    plot_fear_greed_gauge, plot_correlation_heatmap, plot_sentiment_gauge
+    plot_risk_gauge, plot_animated_risk_meter, plot_feature_importance, 
+    plot_market_dominance, plot_fear_greed_gauge, plot_correlation_heatmap, 
+    plot_sentiment_gauge
 )
 from utils import (
     format_large_number, format_currency, format_percentage,
