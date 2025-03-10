@@ -141,16 +141,23 @@ def plot_price_prediction(historical_df, prediction_df, coin_name):
     )
     
     # Add vertical line to separate historical data from predictions
-    first_prediction_date = prediction_df['date'].iloc[0]
-    
-    fig.add_vline(
-        x=first_prediction_date,
-        line_width=1,
-        line_dash="dash",
-        line_color="gray",
-        annotation_text="Prediction Start",
-        annotation_position="top right"
-    )
+    try:
+        first_prediction_date = prediction_df['date'].iloc[0]
+        
+        # Convert timestamp to string to avoid arithmetic issues
+        first_prediction_date_str = pd.to_datetime(first_prediction_date).strftime('%Y-%m-%d')
+        
+        fig.add_vline(
+            x=first_prediction_date_str,
+            line_width=1,
+            line_dash="dash",
+            line_color="gray",
+            annotation_text="Prediction Start",
+            annotation_position="top right"
+        )
+    except Exception as e:
+        st.warning(f"Could not add prediction separator: {e}")
+        # Continue without the vertical line
     
     # Display the chart
     st.plotly_chart(fig, use_container_width=True)
