@@ -1,0 +1,86 @@
+/* Custom CSS for Streamlit application */
+
+/* Main container styling */
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* Card styling */
+.css-1r6slb0 {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Metrics styling */
+.css-1ht1j8u {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.css-1ht1j8u:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+/* High risk indicator */
+.high-risk {
+    color: #ff4b4b;
+    font-weight: bold;
+}
+
+/* Medium risk indicator */
+.medium-risk {
+    color: #ffa64b;
+    font-weight: bold;
+}
+
+/* Low risk indicator */
+.low-risk {
+    color: #4bff4b;
+    font-weight: bold;
+}
+
+/* Header styling */
+h1, h2, h3 {
+    font-weight: 600;
+}
+
+/* Tooltip styling */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+}
+
+.tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #2c3e50;
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 10px;
+    z-index: 1;
+    width: 200px;
+    font-size: 0.8rem;
+}
+
+/* Loading animation */
+.stSpinner > div {
+    border-color: #3366FF transparent transparent !important;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .tooltip:hover::after {
+        width: 150px;
+    }
+}
