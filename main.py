@@ -26,7 +26,8 @@ from visualizations import (
 from utils import (
     format_large_number, format_currency, format_percentage,
     add_risk_color, add_trend_arrow, calculate_expected_return,
-    get_time_periods, days_from_period
+    get_time_periods, days_from_period, get_risk_color_hex,
+    get_risk_description, create_real_time_risk_monitor
 )
 
 # Set Streamlit page configuration
@@ -313,8 +314,43 @@ def main_dashboard():
         # Risk metrics
         st.subheader("Risk Assessment")
         
-        # Display risk gauge
-        plot_risk_gauge(risk_metrics)
+        # Create tabs for different risk visualization methods
+        risk_tab1, risk_tab2, risk_tab3 = st.tabs(["Animated Risk Meter", "Real-Time Monitor", "Traditional Gauge"])
+        
+        with risk_tab1:
+            # Display animated risk meter
+            plot_animated_risk_meter(risk_metrics)
+        
+        with risk_tab2:
+            # Create a placeholder for the real-time risk monitor
+            risk_monitor_placeholder = st.empty()
+            
+            # Initialize the real-time risk monitor
+            create_real_time_risk_monitor(risk_metrics, risk_monitor_placeholder)
+            
+            # Add simulation controls
+            st.markdown("### Real-Time Monitoring Simulation")
+            
+            sim_col1, sim_col2 = st.columns(2)
+            with sim_col1:
+                if st.button("Simulate Risk Alert"):
+                    # Create a temporary copy of risk metrics with higher risk
+                    temp_risk = risk_metrics.copy()
+                    temp_risk["risk_level"] = "Very High"
+                    temp_risk["volatility"] = risk_metrics["volatility"] * 1.5
+                    temp_risk["max_drawdown"] = risk_metrics["max_drawdown"] * 1.2
+                    create_real_time_risk_monitor(temp_risk, risk_monitor_placeholder)
+                    time.sleep(3)
+                    create_real_time_risk_monitor(risk_metrics, risk_monitor_placeholder)
+            
+            with sim_col2:
+                if st.button("Refresh Monitor"):
+                    # Update with current time
+                    create_real_time_risk_monitor(risk_metrics, risk_monitor_placeholder)
+        
+        with risk_tab3:
+            # Display traditional risk gauge
+            plot_risk_gauge(risk_metrics)
         
         # Risk metrics details
         risk_col1, risk_col2, risk_col3 = st.columns(3)

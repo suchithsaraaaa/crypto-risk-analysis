@@ -7,6 +7,9 @@ A comprehensive cryptocurrency analysis application using machine learning for m
 - Cryptocurrency selection with detailed coin information
 - Price history visualization and prediction
 - Risk assessment metrics and analysis
+- Real-time risk monitoring with dynamic indicators
+- Animated risk visualization with color-changing effects
+- Risk simulation capabilities for alert testing
 - Market dominance visualization
 - Fear and greed index tracking
 - Developer and community stats
@@ -59,3 +62,14 @@ Note: The application includes fallback mechanisms when APIs are rate-limited or
 - CoinGecko API has rate limits that may affect data retrieval
 - For better performance, consider obtaining API keys for the services
 - Set any API keys as environment variables before running the application
+
+## Risk Monitoring Features
+
+The application includes advanced risk monitoring capabilities:
+
+- Real-time risk monitoring dashboard with animated indicators
+- Color-coded risk levels that dynamically change based on market conditions
+- Pulsing effects that intensify with higher risk levels
+- Risk simulation tools for testing alert scenarios
+- Detailed risk descriptions and personalized recommendations based on user risk tolerance
+- Multiple visualization methods (animated meters, real-time monitors, traditional gauges)
