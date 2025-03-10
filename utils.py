@@ -6,24 +6,31 @@ from datetime import datetime, timedelta
 
 def format_large_number(num):
     """Format large numbers with suffixes like K, M, B, T"""
-    if num is None:
+    if num is None or num == 'N/A' or not isinstance(num, (int, float)):
         return "N/A"
     
-    magnitude = 0
-    suffixes = ['', 'K', 'M', 'B', 'T']
-    
-    while abs(num) >= 1000 and magnitude < len(suffixes) - 1:
-        magnitude += 1
-        num /= 1000.0
-    
-    if magnitude > 0:
-        # For numbers between 1 and 10, show one decimal place
-        if 1 <= abs(num) < 10:
-            return f"{num:.1f}{suffixes[magnitude]}"
+    try:
+        # Convert to float if it's a string representing a number
+        if isinstance(num, str):
+            num = float(num)
+            
+        magnitude = 0
+        suffixes = ['', 'K', 'M', 'B', 'T']
+        
+        while abs(num) >= 1000 and magnitude < len(suffixes) - 1:
+            magnitude += 1
+            num /= 1000.0
+        
+        if magnitude > 0:
+            # For numbers between 1 and 10, show one decimal place
+            if 1 <= abs(num) < 10:
+                return f"{num:.1f}{suffixes[magnitude]}"
+            else:
+                return f"{int(num)}{suffixes[magnitude]}"
         else:
-            return f"{int(num)}{suffixes[magnitude]}"
-    else:
-        return f"{num}"
+            return f"{num}"
+    except (ValueError, TypeError):
+        return "N/A"
 
 def format_currency(amount, precision=2):
     """Format currency with proper precision"""

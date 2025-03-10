@@ -521,26 +521,58 @@ def main_dashboard():
             )
         
         with detail_col2:
-            st.markdown(
-                f"""
-                ### Developer Stats
-                - **GitHub Stars:** {coin_details.get('developer_data', {}).get('stars', 'N/A')}
-                - **GitHub Forks:** {coin_details.get('developer_data', {}).get('forks', 'N/A')}
-                - **GitHub Subscribers:** {coin_details.get('developer_data', {}).get('subscribers', 'N/A')}
-                - **Commits (4 Weeks):** {coin_details.get('developer_data', {}).get('commit_count_4_weeks', 'N/A')}
-                """
-            )
+            # Check if developer data is available
+            developer_data = coin_details.get('developer_data', {})
+            
+            if not developer_data:
+                st.markdown(
+                    """
+                    ### Developer Stats
+                    - **GitHub Stars:** N/A
+                    - **GitHub Forks:** N/A
+                    - **GitHub Subscribers:** N/A
+                    - **Commits (4 Weeks):** N/A
+                    
+                    *Developer data not available*
+                    """
+                )
+            else:
+                st.markdown(
+                    f"""
+                    ### Developer Stats
+                    - **GitHub Stars:** {developer_data.get('stars', 'N/A')}
+                    - **GitHub Forks:** {developer_data.get('forks', 'N/A')}
+                    - **GitHub Subscribers:** {developer_data.get('subscribers', 'N/A')}
+                    - **Commits (4 Weeks):** {developer_data.get('commit_count_4_weeks', 'N/A')}
+                    """
+                )
         
         with detail_col3:
-            st.markdown(
-                f"""
-                ### Community Stats
-                - **Twitter Followers:** {format_large_number(coin_details.get('community_data', {}).get('twitter_followers', 'N/A'))}
-                - **Reddit Subscribers:** {format_large_number(coin_details.get('community_data', {}).get('reddit_subscribers', 'N/A'))}
-                - **Telegram Users:** {format_large_number(coin_details.get('community_data', {}).get('telegram_channel_user_count', 'N/A'))}
-                - **Facebook Likes:** {format_large_number(coin_details.get('community_data', {}).get('facebook_likes', 'N/A'))}
-                """
-            )
+            # Check if community data is available
+            community_data = coin_details.get('community_data', {})
+            
+            if not community_data:
+                st.markdown(
+                    """
+                    ### Community Stats
+                    - **Twitter Followers:** N/A
+                    - **Reddit Subscribers:** N/A
+                    - **Telegram Users:** N/A
+                    - **Facebook Likes:** N/A
+                    
+                    *Community data not available*
+                    """
+                )
+            else:
+                st.markdown(
+                    f"""
+                    ### Community Stats
+                    - **Twitter Followers:** {format_large_number(community_data.get('twitter_followers', 'N/A'))}
+                    - **Reddit Subscribers:** {format_large_number(community_data.get('reddit_subscribers', 'N/A'))}
+                    - **Telegram Users:** {format_large_number(community_data.get('telegram_channel_user_count', 'N/A'))}
+                    - **Facebook Likes:** {format_large_number(community_data.get('facebook_likes', 'N/A'))}
+                    """
+                )
 
 def main():
     """Main application entry point"""
