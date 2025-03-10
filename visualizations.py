@@ -418,6 +418,12 @@ def plot_animated_risk_meter(risk_metrics):
         
         # Add real-time updating effect using Streamlit's built-in elements
         with st.expander("Risk Interpretation", expanded=False):
+            # Import the utility function for risk descriptions
+            from utils import get_risk_description
+            
+            # Get the risk description
+            risk_description = get_risk_description(risk_level)
+            
             st.markdown(f"""
             - **Current Risk Level:** {risk_level}
             - **Volatility:** {volatility:.4f} - {'Very High' if volatility > 0.8 else 'High' if volatility > 0.6 else 'Medium' if volatility > 0.4 else 'Low'}
@@ -426,14 +432,7 @@ def plot_animated_risk_meter(risk_metrics):
             
             **What This Means:**
             
-            {
-                "Low": "This cryptocurrency has shown relatively stable price behavior with limited volatility compared to the market. It may be suitable for risk-averse investors.",
-                "Medium": "This cryptocurrency has moderate price fluctuations but remains more stable than many altcoins. Suitable for investors with moderate risk tolerance.",
-                "Medium-High": "This cryptocurrency experiences significant price swings and volatility. Investors should be prepared for substantial price movements in either direction.",
-                "High": "This cryptocurrency has high volatility with rapid and unpredictable price movements. Only suitable for risk-tolerant investors who can withstand significant losses.",
-                "Very High": "This cryptocurrency has extreme volatility and price swings. Only suitable for speculative positions with money you can afford to lose entirely.",
-                "Unknown": "Insufficient data to accurately assess risk. Proceed with caution."
-            }.get(risk_level, "Risk assessment unavailable.")
+            {risk_description}
             """)
     
     return True
