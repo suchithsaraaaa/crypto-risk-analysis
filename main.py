@@ -88,11 +88,14 @@ def sidebar():
     # Fetch top coins for selection dropdown
     # Use cached data if available and less than 5 minutes old
     if "top_coins" not in st.session_state or (datetime.now() - st.session_state.last_update_time).seconds > 300:
-        with st.sidebar.spinner("Loading cryptocurrencies..."):
-            top_coins = get_top_coins(limit=100)
-            if top_coins:
-                st.session_state.top_coins = top_coins
-                st.session_state.last_update_time = datetime.now()
+        # Display a spinner in the sidebar
+        spinner_text = st.sidebar.text("Loading cryptocurrencies...")
+        top_coins = get_top_coins(limit=100)
+        if top_coins:
+            st.session_state.top_coins = top_coins
+            st.session_state.last_update_time = datetime.now()
+        # Remove the spinner text
+        spinner_text.empty()
     
     # Coin selection dropdown
     if "top_coins" in st.session_state and st.session_state.top_coins:
