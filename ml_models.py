@@ -118,87 +118,123 @@ def predict_future_prices(model, df, days_to_predict=7, target_col='price', wind
     Returns:
         DataFrame containing predicted prices
     """
-    if model is None or df.empty:
-        return pd.DataFrame()
-    
-    # Prepare dataframe for prediction
-    df = df.copy()
-    
-    # Create a copy of the last 'window' days of data
-    future_df = df.tail(window).copy()
-    
-    # Initialize lists to store predictions and dates
-    predictions = []
-    dates = []
-    last_date = df['date'].iloc[-1]
-    
-    # Create lag features for initial prediction
-    for i in range(1, window + 1):
-        future_df[f'{target_col}_lag_{i}'] = future_df[target_col].shift(i)
-        future_df[f'volume_lag_{i}'] = future_df['volume'].shift(i)
-    
-    # Create technical indicators
-    future_df['sma_5'] = future_df[target_col].rolling(window=5).mean()
-    future_df['sma_10'] = future_df[target_col].rolling(window=10).mean()
-    
-    # Simplified RSI calculation
-    delta = future_df[target_col].diff()
-    gain = delta.mask(delta < 0, 0)
-    loss = -delta.mask(delta > 0, 0)
-    avg_gain = gain.rolling(window=14).mean()
-    avg_loss = loss.rolling(window=14).mean()
-    avg_loss = avg_loss.replace(0, 0.001)
-    rs = avg_gain / avg_loss
-    future_df['rsi'] = 100 - (100 / (1 + rs))
-    
-    # For each day we want to predict
-    for i in range(days_to_predict):
-        # Get features for prediction
-        features = [col for col in future_df.columns if 'lag' in col or 'sma' in col or 'rsi' in col]
+    try:
+        if model is None or df.empty:
+            return pd.DataFrame()
         
-        # For the first prediction, use the most recent data point
-        if i == 0:
-            X_pred = future_df[features].iloc[-1].values.reshape(1, -1)
-        else:
-            # Update lag features based on previous predictions
-            for j in range(window, 0, -1):
-                if j > 1:
-                    future_df.loc[future_df.index[-1], f'{target_col}_lag_{j}'] = future_df.loc[future_df.index[-1], f'{target_col}_lag_{j-1}']
-                else:
-                    future_df.loc[future_df.index[-1], f'{target_col}_lag_1'] = predicted_price
+        # Prepare dataframe for prediction
+        df = df.copy()
+        
+        # Create a copy of the last 'window' days of data
+        future_df = df.tail(window + 14).copy()  # Take extra data for better indicators
+        
+        # Initialize lists to store predictions and dates
+        predictions = []
+        dates = []
+        last_date = df['date'].iloc[-1]
+        
+        # Create lag features for initial prediction
+        for i in range(1, window + 1):
+            future_df[f'{target_col}_lag_{i}'] = future_df[target_col].shift(i)
+            future_df[f'volume_lag_{i}'] = future_df['volume'].shift(i)
+        
+        # Create technical indicators
+        future_df['sma_5'] = future_df[target_col].rolling(window=5).mean()
+        future_df['sma_10'] = future_df[target_col].rolling(window=10).mean()
+        
+        # Simplified RSI calculation
+        delta = future_df[target_col].diff()
+        gain = delta.mask(delta < 0, 0)
+        loss = -delta.mask(delta > 0, 0)
+        avg_gain = gain.rolling(window=14).mean()
+        avg_loss = loss.rolling(window=14).mean()
+        avg_loss = avg_loss.replace(0, 0.001)
+        rs = avg_gain / avg_loss
+        future_df['rsi'] = 100 - (100 / (1 + rs))
+        
+        # Fill NaN values with appropriate methods
+        future_df = future_df.fillna(method='bfill').fillna(method='ffill')
+        
+        # Get the last window days of data for predictions
+        future_df = future_df.tail(window).copy()
+        
+        # For each day we want to predict
+        for i in range(days_to_predict):
+            # Get features for prediction
+            features = [col for col in future_df.columns if 'lag' in col or 'sma' in col or 'rsi' in col]
             
-            # Update SMA and RSI (simplified)
-            future_df.loc[future_df.index[-1], 'sma_5'] = future_df[target_col].iloc[-5:].mean()
-            future_df.loc[future_df.index[-1], 'sma_10'] = future_df[target_col].iloc[-10:].mean()
+            # For the first prediction, use the most recent data point
+            if i == 0:
+                # Check for NaN values and fill if necessary
+                X_pred_row = future_df[features].iloc[-1].copy()
+                if X_pred_row.isna().any():
+                    print(f"Warning: Found NaN in prediction features, filling with mean values")
+                    for col in features:
+                        if pd.isna(X_pred_row[col]):
+                            X_pred_row[col] = future_df[col].mean()
+                
+                X_pred = X_pred_row.values.reshape(1, -1)
+            else:
+                # Update lag features based on previous predictions
+                for j in range(window, 0, -1):
+                    if j > 1:
+                        future_df.loc[future_df.index[-1], f'{target_col}_lag_{j}'] = future_df.loc[future_df.index[-1], f'{target_col}_lag_{j-1}']
+                    else:
+                        future_df.loc[future_df.index[-1], f'{target_col}_lag_1'] = predicted_price
+                
+                # Update SMA and RSI (simplified)
+                future_df.loc[future_df.index[-1], 'sma_5'] = future_df[target_col].iloc[-5:].mean()
+                future_df.loc[future_df.index[-1], 'sma_10'] = future_df[target_col].iloc[-10:].mean()
+                
+                # Check for NaN values in features and fill if necessary
+                X_pred_row = future_df[features].iloc[-1].copy()
+                if X_pred_row.isna().any():
+                    print(f"Warning: Found NaN in prediction features for day {i+1}, filling with mean values")
+                    for col in features:
+                        if pd.isna(X_pred_row[col]):
+                            X_pred_row[col] = future_df[col].mean()
+                
+                X_pred = X_pred_row.values.reshape(1, -1)
             
-            # Get features for next prediction
-            X_pred = future_df[features].iloc[-1].values.reshape(1, -1)
+            # Make prediction
+            predicted_price = model.predict(X_pred)[0]
+            
+            # Calculate next date
+            next_date = last_date + pd.Timedelta(days=i+1)
+            
+            # Store prediction and date
+            predictions.append(predicted_price)
+            dates.append(next_date)
+            
+            # Add prediction to dataframe for next iteration
+            new_row = future_df.iloc[-1].copy()
+            new_row['date'] = next_date
+            new_row[target_col] = predicted_price
+            new_row['volume'] = future_df['volume'].mean()  # Use average volume
+            
+            future_df = pd.concat([future_df, pd.DataFrame([new_row])])
         
-        # Make prediction
-        predicted_price = model.predict(X_pred)[0]
+        # Create results dataframe
+        results_df = pd.DataFrame({
+            'date': dates,
+            'predicted_price': predictions
+        })
         
-        # Calculate next date
-        next_date = last_date + pd.Timedelta(days=i+1)
+        return results_df
         
-        # Store prediction and date
-        predictions.append(predicted_price)
-        dates.append(next_date)
+    except Exception as e:
+        import traceback
+        print(f"Error in predict_future_prices: {str(e)}")
+        print(traceback.format_exc())
         
-        # Add prediction to dataframe for next iteration
-        new_row = future_df.iloc[-1].copy()
-        new_row['date'] = next_date
-        new_row[target_col] = predicted_price
-        new_row['volume'] = future_df['volume'].mean()  # Use average volume
+        # Return a simple dataframe with estimated future dates in case of error
+        simple_dates = [last_date + pd.Timedelta(days=i+1) for i in range(days_to_predict)]
+        last_price = df[target_col].iloc[-1] if not df.empty else 0
         
-        future_df = pd.concat([future_df, pd.DataFrame([new_row])])
-    
-    # Create results dataframe
-    results_df = pd.DataFrame({
-        'date': dates,
-        'predicted_price': predictions
-    })
-    
-    return results_df
+        return pd.DataFrame({
+            'date': simple_dates,
+            'predicted_price': [last_price] * days_to_predict
+        })
 
 def calculate_risk_metrics(df, volatility_window=14):
     """
