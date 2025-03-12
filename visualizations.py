@@ -71,10 +71,10 @@ def plot_price_prediction(historical_df, prediction_df, coin_name):
     if historical_df.empty or prediction_df.empty:
         st.error(f"Insufficient data to generate predictions for {coin_name}")
         return
-    
+
     # Create figure
     fig = go.Figure()
-    
+
     # Add historical price line
     fig.add_trace(
         go.Scatter(
@@ -84,7 +84,7 @@ def plot_price_prediction(historical_df, prediction_df, coin_name):
             line=dict(color="#3366FF", width=2)
         )
     )
-    
+
     # Add prediction line
     fig.add_trace(
         go.Scatter(
@@ -94,12 +94,12 @@ def plot_price_prediction(historical_df, prediction_df, coin_name):
             line=dict(color="#FF6B3D", width=2, dash='dash')
         )
     )
-    
+
     # Add confidence interval (simplified)
     volatility = historical_df['price'].pct_change().std()
     upper_bound = prediction_df['predicted_price'] * (1 + volatility * 1.96)
     lower_bound = prediction_df['predicted_price'] * (1 - volatility * 1.96)
-    
+
     fig.add_trace(
         go.Scatter(
             x=prediction_df['date'],
@@ -110,7 +110,7 @@ def plot_price_prediction(historical_df, prediction_df, coin_name):
             showlegend=False
         )
     )
-    
+
     fig.add_trace(
         go.Scatter(
             x=prediction_df['date'],
@@ -122,7 +122,7 @@ def plot_price_prediction(historical_df, prediction_df, coin_name):
             showlegend=False
         )
     )
-    
+
     # Add layout details
     fig.update_layout(
         title=f"{coin_name} Price Prediction",
@@ -139,16 +139,22 @@ def plot_price_prediction(historical_df, prediction_df, coin_name):
         height=500,
         hovermode="x unified"
     )
-    
+
     # Add vertical line to separate historical data from predictions
     try:
         first_prediction_date = prediction_df['date'].iloc[0]
-        
-        # Convert timestamp to string to avoid arithmetic issues
-        first_prediction_date_str = pd.to_datetime(first_prediction_date).strftime('%Y-%m-%d')
-        
+
+        # Handle integer timestamps (seconds or milliseconds)
+        if isinstance(first_prediction_date, (int, float)):
+            first_prediction_date = pd.to_datetime(first_prediction_date, unit='s', errors='coerce')
+        else:
+            first_prediction_date = pd.to_datetime(first_prediction_date, errors='coerce')
+
+        if pd.isna(first_prediction_date):
+            raise ValueError("Invalid date format in prediction data.")
+
         fig.add_vline(
-            x=first_prediction_date_str,
+            x=first_prediction_date,
             line_width=1,
             line_dash="dash",
             line_color="gray",
@@ -157,11 +163,9 @@ def plot_price_prediction(historical_df, prediction_df, coin_name):
         )
     except Exception as e:
         st.warning(f"Could not add prediction separator: {e}")
-        # Continue without the vertical line
-    
+
     # Display the chart
     st.plotly_chart(fig, use_container_width=True)
-
 def plot_volatility(df, coin_name, window=7):
     """
     Plot volatility chart
@@ -433,7 +437,7 @@ def plot_animated_risk_meter(risk_metrics):
             **What This Means:**
             
             {risk_description}
-            """)
+            """,unsafe_allow_html=True)
     
     return True
 
