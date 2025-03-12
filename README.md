@@ -36,7 +36,7 @@ Run the Streamlit application:
 streamlit run main.py
 ```
 
-The application will be available at http://localhost:8501
+The application will be available at http://localhost:5000
 
 ## Files
 
