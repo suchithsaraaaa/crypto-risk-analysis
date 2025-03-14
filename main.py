@@ -423,11 +423,56 @@ def main_dashboard():
         else:
             st.warning(f"This cryptocurrency's risk level ({coin_risk}) may not align with your risk tolerance ({user_risk}).")
             
-            # Offer recommendations
-            if user_risk == "Low" and coin_risk not in risk_match[user_risk]:
-                st.info("Consider cryptocurrencies with lower volatility or stablecoins for a better match to your risk tolerance.")
-            elif user_risk == "Medium" and coin_risk not in risk_match[user_risk]:
-                st.info("Consider top market cap cryptocurrencies with established histories for a better match to your risk tolerance.")
+            # Find matching coins
+            matching_coins = []
+            with st.spinner("Finding suitable cryptocurrencies..."):
+                for coin in st.session_state.top_coins[:20]:  # Check top 20 coins
+                    coin_id = coin['id']
+                    if coin_id in st.session_state.historical_data:
+                        coin_hist = st.session_state.historical_data[coin_id].get(st.session_state.time_period)
+                        if coin_hist is not None:
+                            coin_risk_metrics = calculate_risk_metrics(coin_hist)
+                            if coin_risk_metrics['risk_level'] in risk_match[user_risk]:
+                                matching_coins.append({
+                                    'name': coin['name'],
+                                    'symbol': coin['symbol'].upper(),
+                                    'risk_level': coin_risk_metrics['risk_level']
+                                })
+            
+            # Display matching coins
+            if matching_coins:
+                st.info("Here are some cryptocurrencies that better match your risk tolerance:")
+                
+                # Create a clean table display
+                matching_df = pd.DataFrame(matching_coins)
+                matching_df.columns = ['Name', 'Symbol', 'Risk Level']
+                
+                # Apply custom styling
+                st.markdown("""
+                <style>
+                .matching-coins {
+                    background-color: rgba(40, 40, 40, 0.7);
+                    border-radius: 8px;
+                    padding: 10px;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                with st.container():
+                    st.dataframe(
+                        matching_df,
+                        hide_index=True,
+                        column_config={
+                            "Name": st.column_config.TextColumn("Name", width="medium"),
+                            "Symbol": st.column_config.TextColumn("Symbol", width="small"),
+                            "Risk Level": st.column_config.TextColumn("Risk Level", width="small")
+                        }
+                    )
+            else:
+                if user_risk == "Low":
+                    st.info("Consider stablecoins or cryptocurrencies with lower volatility for a better match to your risk tolerance.")
+                elif user_risk == "Medium":
+                    st.info("Consider top market cap cryptocurrencies with established histories for a better match to your risk tolerance.")
     
     with tab3:
         col1, col2 = st.columns(2)
